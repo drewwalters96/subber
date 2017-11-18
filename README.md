@@ -16,7 +16,7 @@ pip install -r requirements.txt
 Start REST API
 ```bash
 cd subber
-gunicorn server:api
+gunicorn app:api
 ```
 
 Request subreddit recommendations for a user
