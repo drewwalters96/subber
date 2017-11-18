@@ -1,6 +1,7 @@
 import config
 import praw
 
+
 class Reddit(object):
     """Reddit API connection"""
 
@@ -18,6 +19,7 @@ class Reddit(object):
     def __exit__(self, exception_type, exception_value, traceback):
         pass
 
+
 def get_user_comments(session, user):
     """Return a list of user comments
 
@@ -27,6 +29,7 @@ def get_user_comments(session, user):
     """
     return session.redditor(user).comments.new(limit=2)
 
+
 def get_user_submissions(session, user):
     """Return a list of user submissions
 
@@ -35,6 +38,7 @@ def get_user_submissions(session, user):
     user -- the username to retrieve submissions for
     """
     return session.redditor(user).submissions.top(limit=2)
+
 
 def get_user_sub_score(session, user):
     """Return a dictionary containing a user's active subreddits with a
@@ -68,6 +72,7 @@ def get_user_sub_score(session, user):
 
     return subs
 
+
 def get_top_post_commenters(session, user):
     """Return a list of commenters from a user's top posts
 
@@ -77,6 +82,7 @@ def get_top_post_commenters(session, user):
     """
     submissions = get_user_submissions(session, user)
     return [c.author for s in submissions for c in s.comments[:5]]
+
 
 def get_user_recommendations(session, user):
     """Return a list of recommended subs for a user

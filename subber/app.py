@@ -1,6 +1,7 @@
 import falcon
 import reddit
 
+
 class SessionMiddleware(object):
     def process_request(self, req, resp):
         """Add Reddit API session to request context
@@ -30,6 +31,7 @@ class Recommend:
         """
         session = req.context['session']
         resp.media = reddit.get_user_recommendations(session, user)
+
 
 api = falcon.API(middleware=[SessionMiddleware()])
 api.add_route('/user/{user}', Recommend())
