@@ -22,11 +22,11 @@ class Reddit(object):
 
     def get_user_comments(self, user):
         """Returns a list of user comments"""
-        return self._api.redditor(user).comments.new(limit=None)
+        return self._api.redditor(user).comments.new(limit=2)
 
     def get_user_submissions(self, user):
         """Returns a list of user submissions"""
-        return self._api.redditor(user).submissions.top('all')
+        return self._api.redditor(user).submissions.top(limit=2)
 
     def get_user_sub_score(self, user):
         """Returns a dictionary containing a user's active subreddits with a
@@ -53,5 +53,25 @@ class Reddit(object):
                 subs[sub] = subs[sub] + 2
             else:
                 subs[sub] = 2
+
+        return subs
+
+    def _get_top_post_commenters(self, user):
+        """Returns a list of commenters from a user's top post"""
+        submissions = self.get_user_submissions(user)
+        return [c.author for s in submissions for c in s.comments[:5]]
+
+    def get_user_recommendations(self, user):
+        """Returns a list of recommended subs for a user"""
+        commenters = self._get_top_post_commenters(user)
+
+        # Get subs commenters are active in
+        subs = []
+        for c in commenters:
+            if not c:
+                continue
+            for sub, _ in self.get_user_sub_score(c.name).items():
+                if sub not in subs:
+                    subs.append(sub)
 
         return subs

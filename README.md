@@ -19,7 +19,7 @@ cd subber
 gunicorn server:api
 ```
 
-Request subreddit scores for a user
+Request subreddit recommendations for a user
 ```bash
 curl 127.0.0.1:8000/user/{REDDIT-USERNAME}
 ```
