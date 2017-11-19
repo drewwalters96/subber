@@ -13,10 +13,10 @@ Install project dependencies
 pip install -r requirements.txt
 ```
 
-Start REST API
+Start REST API with timeout
 ```bash
 cd subber
-gunicorn app:api
+gunicorn app:api -t 900
 ```
 
 Request subreddit recommendations for a user

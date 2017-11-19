@@ -20,86 +20,107 @@ class Reddit(object):
         pass
 
 
-def get_user_comments(session, user):
-    """Return a list of user comments
-
-    Keyword arguments:
-    session  -- instance of the Reddit api
-    user -- the username to retrieve comments for
-    """
-    return session.redditor(user).comments.new(limit=2)
-
-
-def get_user_submissions(session, user):
-    """Return a list of user submissions
-
-    Keyword arguments:
-    session  -- instance of the Reddit api
-    user -- the username to retrieve submissions for
-    """
-    return session.redditor(user).submissions.top(limit=2)
-
-
-def get_user_sub_score(session, user):
-    """Return a dictionary containing a user's active subreddits with a
-    calculated score
-
-    Keyword arguments:
-    session  -- instance of the Reddit api
-    user -- the username to retrieve submissions for
-    """
-    subs = dict()
-
-    # Score subreddits from user comments
-    comments = get_user_comments(session, user)
-    for c in comments:
-        sub = c.subreddit_name_prefixed
-
-        if sub in subs:
-            subs[sub] = subs[sub] + 1
-        else:
-            subs[sub] = 1
-
-    # Score subreddits from user posts
-    posts = get_user_submissions(session, user)
-    for p in posts:
-        sub = p.subreddit_name_prefixed
-
-        if sub in subs:
-            subs[sub] = subs[sub] + 2
-        else:
-            subs[sub] = 2
-
-    return subs
-
-
-def get_top_post_commenters(session, user):
-    """Return a list of commenters from a user's top posts
-
-    Keyword arguments:
-    session  -- instance of the Reddit api
-    user -- the username to retrieve submissions for
-    """
-    submissions = get_user_submissions(session, user)
-    return [c.author for s in submissions for c in s.comments[:5]]
-
-
 def get_user_recommendations(session, user):
     """Return a list of recommended subs for a user
 
     Keyword arguments:
     session  -- instance of the Reddit api
-    user -- the username to retrieve submissions for
+    user     -- username to retrieve recommendations for
     """
-    commenters = get_top_post_commenters(session, user)
+    # Get similar users
+    similar_users = _get_similar_users(session, user)
 
-    # Get subs commenters are active in
+    # Create a list of sub recommendations
     subs = []
-    for c in commenters:
-        if not c:
-            continue
-        for sub, _ in get_user_sub_score(session, c.name).items():
+    for user in similar_users:
+        # Get active subs for similar user
+        active_subs = _get_active_subs(session, user)
+
+        # Add active subs to recommendations
+        for sub in active_subs:
             if sub not in subs:
                 subs.append(sub)
+
+    return subs
+
+
+def _get_similar_users(session, user):
+    """Return a list containing users that have commented on a user's post
+    and users whose posts have been commented on by a user.
+
+    Keyword arguments:
+    session -- instance of the Reddit api
+    user    -- username to retrieve similar users for
+    """
+    # Retrieve commenters from parent comments
+    parent_commenters = []
+    comments = _get_user_comments(session, user)
+    try:
+        for comment in comments:
+            parent = comment.parent().author.name
+            parent_commenters.append(parent)
+    except Exception:
+        pass
+
+    # Retrieve commenters from user's top posts
+    submission_commenters = []
+    submissions = _get_user_submissions(session, user)
+    try:
+        for s in submissions:
+            for c in s.comments[:4]:
+                if c.author:
+                    submission_commenters.append(c.author.name)
+    except Exception:
+        pass
+
+    return parent_commenters + submission_commenters
+
+
+def _get_user_comments(session, user):
+    """Return a list of a user's thirty newest comments
+
+    Keyword arguments:
+    session  -- instance of the Reddit api
+    user     -- username to retrieve comments for
+    """
+    return session.redditor(user).comments.new(limit=30)
+
+
+def _get_user_submissions(session, user):
+    """Return a list of a user's top fifteen submissions
+
+    Keyword arguments:
+    session  -- instance of the Reddit api
+    user     -- username to retrieve submissions for
+    """
+    return session.redditor(user).submissions.top(limit=15)
+
+
+def _get_active_subs(session, user):
+    """Return a list of subs a user is active in
+
+    Keyword arguments:
+    session -- instance of the Reddit api
+    user    -- username to retrieve active subs for
+    """
+    def process_posts(posts):
+        subs = []
+        try:
+            for p in posts:
+                sub = p.subreddit_name_prefixed
+
+                if sub not in subs:
+                    subs.append(sub)
+        except Exception:
+            pass
+
+        return subs
+
+    # Retrieve user comments and posts
+    comments = _get_user_comments(session, user)
+    submissions = _get_user_submissions(session, user)
+
+    # Process active subs
+    subs = process_posts(comments) + process_posts(submissions)
 
     return subs
