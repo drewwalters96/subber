@@ -124,3 +124,18 @@ def _get_active_subs(session, user):
     subs = process_posts(comments) + process_posts(submissions)
 
     return subs
+
+
+def get_sub_info(session, sub):
+    """Return a dictionary containing metadata for a subreddit
+
+    Keyword arguments:
+    session -- instance of the Reddit api
+    sub     -- subreddit to get metadata for
+    """
+    subreddit = session.subreddit(sub)
+    sub_name = 'r/{}'.format(sub)
+
+    return {'sub': {'name': sub_name,
+                    'title': subreddit.title,
+                    'desc': subreddit.description}}

@@ -30,7 +30,27 @@ class Recommend:
         resp -- response added to response object media
         """
         session = req.context['session']
-        resp.media = reddit.get_user_recommendations(session, user)
+
+        try:
+            recommendations = reddit.get_user_recommendations(session, user)
+
+            # Get subreddit metadata
+            subs = []
+            for sub in recommendations:
+                data = reddit.get_sub_info(session, sub[2:])
+                subs.append(data)
+
+            response = {'status': 'success',
+                        'user': user,
+                        'recommendations': subs}
+
+            resp.status = falcon.HTTP_200
+
+        except Exception as e:
+            response = {'status': 'failure', 'user': user}
+            resp.status = falcon.HTTP_500
+
+        resp.media = response
 
 
 api = falcon.API(middleware=[SessionMiddleware()])
