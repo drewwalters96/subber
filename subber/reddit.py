@@ -2,7 +2,7 @@ import logging
 
 import praw
 
-import config
+from subber import config
 
 
 class Reddit(object):
@@ -11,7 +11,7 @@ class Reddit(object):
     def __init__(self):
         try:
             self._cfg = config.get_config()['reddit-api']
-        except:
+        except Exception:
             logging.exception('Unhandled exception while getting '
                               'configuration')
 
@@ -24,8 +24,8 @@ class Reddit(object):
                                        username=self._cfg['username'])
         except KeyError:
             logging.debug('Configuration file missing one or more'
-                              ' required fields when passed to Reddit'
-                              ' connection')
+                          ' required fields when passed to Reddit'
+                          ' connection')
             return
         except Exception:
             logging.exception('Unhandled exception while creating a Reddit'
@@ -107,7 +107,7 @@ def _get_similar_users(session, user):
         submissions = _get_user_submissions(session, user)
     except Exception:
         logging.error('Unhandled error while getting comments '
-                          'for user {}'.format(user))
+                      'for user {}'.format(user))
         submissions = list()
     try:
         for s in submissions:
