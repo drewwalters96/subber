@@ -1,4 +1,5 @@
 import configparser
+import logging
 
 
 def get_config():
@@ -27,6 +28,9 @@ def get_config():
         for section, opts in required_sections.items():
             for opt in opts:
                 if not config.has_option(section, opt):
+                    logging.exception('Missing required config option "{}"'
+                                      ' in section "{}"'.format(
+                                                                opt, section)
                     raise Exception('Required config option "{}" in section '
                                     '"{}" missing from config file '
                                     '"{}"'.format(opt, section, CONFIG_FILE))
@@ -35,7 +39,8 @@ def get_config():
     try:
         config = configparser.RawConfigParser()
         config.readfp(open(CONFIG_FILE))
-    except Exception:
+    except Exception as e:
+        logging.exception('Error encountered while loading config file \n')
         raise Exception('Config file not found. Please add a config file '
                         '"{}" to the subber directory.'.format(CONFIG_FILE))
 

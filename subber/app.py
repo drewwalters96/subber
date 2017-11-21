@@ -1,6 +1,6 @@
 import falcon
 import reddit
-
+import logging
 
 class SessionMiddleware(object):
     def process_request(self, req, resp):
@@ -13,8 +13,12 @@ class SessionMiddleware(object):
         Side effects:
         req -- API session added to request context
         """
-        with reddit.Reddit() as session:
-            req.context = {'session': session}
+        try:
+            with reddit.Reddit() as session:
+                req.context = {'session': session}
+        except Exception as e:
+            logging.exception('Unable add Reddit API session'
+                              ' to request context.')
 
 
 class Recommend:
@@ -29,7 +33,14 @@ class Recommend:
         Side effects:
         resp -- response added to response object media
         """
-        session = req.context['session']
+        logging.info('Recieved recommendation request '
+                     'for user {0}'.format(user))
+        try:
+            session = req.context['session']
+        except KeyError as e:
+            logging.exception('Request context does not contain session '
+                              'data')
+            return
 
         try:
             recommendations = reddit.get_user_recommendations(session, user)
@@ -45,13 +56,24 @@ class Recommend:
                         'recommendations': subs}
 
             resp.status = falcon.HTTP_200
+            logging.info('Returning success response for user {} with '
+                         'recommendations {}'.format(user, recommendations))
 
         except Exception as e:
+            logging.exception('Exception while getting user recommendations '
+                              ' for user {}'.format(user))
             response = {'status': 'failure', 'user': user}
             resp.status = falcon.HTTP_500
-
         resp.media = response
 
+# Start logging - kill script if there is an error opening log file
+try:
+    logging.basicConfig(filename='subber.log', level=logging.DEBUG, format='%(asctime)s %(message)s', filemode='a')
+except Exception as e:
+    exit('Unable to initiate logging because of: \n{}'.format(e))
 
-api = falcon.API(middleware=[SessionMiddleware()])
-api.add_route('/user/{user}', Recommend())
+try:
+    api = falcon.API(middleware=[SessionMiddleware()])
+    tryapi.add_route('/user/{user}', Recommend())
+except Exception as e:
+    logging.exception('Unhandled exception while initializing API')
