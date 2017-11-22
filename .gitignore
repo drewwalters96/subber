@@ -1,1 +1,7 @@
-.cfg
+subber.cfg
+*.pyc
+*/__pycache__/*
+*.log
+*/venv/*
+venv/*
+venv
