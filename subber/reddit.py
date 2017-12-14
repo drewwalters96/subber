@@ -60,7 +60,7 @@ def get_user_recommendations(session, user):
             # Add active subs to recommendations
             for sub in active_subs:
                 if sub not in subs:
-                    subs.append(sub)
+                    subs.append(get_sub_info(session, sub[2:]))
 
         except Exception as e:
             logger.exception('Unable to get recommendations for user {}. '
@@ -93,8 +93,8 @@ def _get_similar_users(session, user):
             parent = comment.parent().author.name
             parent_commenters.append(parent)
     except Exception:
-            # Comment is deleted
-            pass
+        # Comment is deleted
+        pass
 
     # Retrieve commenters from user's top posts
     submission_commenters = []
@@ -168,7 +168,7 @@ def _get_active_subs(session, user):
         except Exception:
             # Skip post if missing metadata
             logger.error('Error processing content request results for user '
-                         '{}. User may be deleted'.format(user))
+                         '{}'.format(user))
             pass
 
         return subs
@@ -209,10 +209,9 @@ def get_sub_info(session, sub):
     """
     try:
         subreddit = session.subreddit(sub)
-        sub_name = 'r/{}'.format(sub)
 
-        return {'sub': {'name': sub_name,
-                        'title': subreddit.title,
-                        'desc': subreddit.description}}
+        return {'name': subreddit.display_name_prefixed,
+                'title': subreddit.title,
+                'desc': subreddit.public_description_html}
     except Exception:
         logger.debug('Unable to retrieve sub info for {}'.format(sub))

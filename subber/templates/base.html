@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Subber</title>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+    <!-- style -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/results.css') }}">
+  </head>
+  <body>
+    <div class="jumbotron">
+      <div class="container">
+        <h1 class="display-3">Subber</h1>
+        <h4>Subreddits that interest you</h4>
+        <div id="content">{% block content %}{% endblock %}</div>
+      </div>
+    </div>
+
+    <footer class="container">
+      <p>&copy; Subber Authors - Licensed under GPLv3</p>
+    </footer>
+  </body>
+</html>
