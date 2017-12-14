@@ -1,0 +1,11 @@
+.card {
+  margin-top: 10px;
+}
+
+.card-text, .card-title {
+  margin: 25px;
+}
+
+#visit-btn {
+  margin: 25px;
+}

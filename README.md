@@ -25,14 +25,11 @@ pip3 install .
 Start REST API with timeout value
 
 ```bash
-gunicorn subber.app:api -t 900
+gunicorn subber.subber:app -t 900
 ```
 
-Request subreddit recommendations for a user
-
-```bash
-curl 127.0.0.1:8000/user/{REDDIT-USERNAME}
-```
+Request subreddit recommendations for a user by opening your browser and
+visiting [127.0.0.1:8000](http://127.0.0.1:8000)
 
 ## Troubleshooting
 
