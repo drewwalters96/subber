@@ -15,16 +15,16 @@ mv subber/subber.cfg.example subber/subber.cfg
 vim subber/subber.cfg
 ```
 
-Install project dependencies for Python 3
+Install project dependencies and package for Python 3
 
 ```bash
 pip3 install -r requirements.txt
+pip3 install -e .
 ```
 
 Start REST API with timeout
 
 ```bash
-cd subber
 gunicorn app:api -t 900
 ```
 
