@@ -48,31 +48,37 @@ def get_user_recommendations(session, user):
     # Get similar users
     try:
         similar_users = _get_similar_users(session, user)
-    except Exception:
-        logging.exception('Unhandled exception while getting similar '
-                          'users for user {}'.format(user))
+    except Exception as e:
+        logging.error('Unable to get recommendations for user {}. Error '
+                      'retrieving similar users.'.format(user))
+        logging.exception(e)
+
         return
+
     # Create a list of sub recommendations
     subs = []
     for sim_user in similar_users:
         # Get active subs for similar user
         try:
             active_subs = _get_active_subs(session, sim_user)
-        except Exception:
-            logging.exception('Unhandled exception while getting '
-                              'active subs for similar user {} wh'
-                              'ile getting recommendations for us'
-                              'er {}'.format(sim_user, user))
-            pass
-        # Add active subs to recommendations
-        for sub in active_subs:
-            if sub not in subs:
-                subs.append(sub)
-    logging.info('Recommendations for user {} found as {}\n'.format(
-                 user, subs))
+
+            # Add active subs to recommendations
+            for sub in active_subs:
+                if sub not in subs:
+                    subs.append(sub)
+
+        except Exception as e:
+            logging.exception('Unable to get recommendations for user {}. '
+                              'Error retrieving active subs for user '
+                              '{}'.format(user, sim_user))
+            logging.exception(e)
+
     if len(subs) == 0:
-        logging.warning('Warning: 0 recommendations found for user {}'.format(
-                        user))
+        logging.warning('Warning: No recommendations found for user '
+                        '{}'.format(user))
+    else:
+        logging.info('Recommending subs {} to user {}.'.format(subs, user))
+
     return subs
 
 
