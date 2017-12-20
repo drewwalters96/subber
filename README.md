@@ -19,13 +19,13 @@ Install project dependencies and package for Python 3
 
 ```bash
 pip3 install -r requirements.txt
-pip3 install -e .
+pip3 install .
 ```
 
-Start REST API with timeout
+Start REST API with timeout value
 
 ```bash
-gunicorn app:api -t 900
+gunicorn subber.app:api -t 900
 ```
 
 Request subreddit recommendations for a user
@@ -33,3 +33,11 @@ Request subreddit recommendations for a user
 ```bash
 curl 127.0.0.1:8000/user/{REDDIT-USERNAME}
 ```
+
+## Troubleshooting
+
+If a runtime error occurs while Subber is running, Subber will terminate and
+log detailed error messages in `subber.log`. If more details are not available,
+please file an issue on the Subber
+[issues page](https://github.com/drewwalters96/subber/issues) along with a copy
+of your `subber.log` file.

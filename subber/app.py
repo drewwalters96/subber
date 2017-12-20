@@ -2,26 +2,9 @@ import logging
 
 import falcon
 
-import reddit
+from subber import reddit
 
-
-class SessionMiddleware(object):
-    def process_request(self, req, resp):
-        """Add Reddit API session to request context
-
-        Keyword arguments:
-        req  -- request object to be routed to the request handler
-        resp -- resp object to append response content
-
-        Side effects:
-        req -- API session added to request context
-        """
-        try:
-            with reddit.Reddit() as session:
-                req.context = {'session': session}
-        except Exception:
-            logging.exception('Unable add Reddit API session'
-                              ' to request context.')
+logger = logging.getLogger(__name__)
 
 
 class Recommend:
@@ -36,23 +19,9 @@ class Recommend:
         Side effects:
         resp -- response added to response object media
         """
-        logging.info('Recieved recommendation request '
-                     'for user {0}'.format(user))
+        logging.info('Recieved request GET /user/{}'.format(user))
         try:
-            session = req.context['session']
-        except KeyError:
-            logging.exception('Request context does not contain session '
-                              'data')
-            return
-
-        try:
-            recommendations = reddit.get_user_recommendations(session, user)
-
-            # Get subreddit metadata
-            subs = []
-            for sub in recommendations:
-                data = reddit.get_sub_info(session, sub[2:])
-                subs.append(data)
+            subs = reddit.get_user_recommendations(session, user)
 
             response = {'status': 'success',
                         'user': user,
@@ -60,25 +29,44 @@ class Recommend:
 
             resp.status = falcon.HTTP_200
             logging.info('Returning success response for user {} with '
-                         'recommendations {}'.format(user, recommendations))
+                         'recommendations {}'.format(user, subs))
 
         except Exception:
             logging.exception('Exception while getting user recommendations '
                               'for user {}'.format(user))
             response = {'status': 'failure', 'user': user}
             resp.status = falcon.HTTP_500
+
         resp.media = response
 
 
-# Start logging - kill script if there is an error opening log file
-try:
-    logging.basicConfig(filename='subber.log', level=logging.DEBUG,
-                        format='%(asctime)s %(message)s', filemode='a')
-except Exception as e:
-    exit('Unable to initiate logging because of: \n{}'.format(e))
+def init_logging():
+    """Init Subber logging"""
+    try:
+        logging.basicConfig(filename='subber.log', level=logging.DEBUG,
+                            format='%(asctime)-26s %(name)-17s '
+                                   '%(levelname)-8s %(message)s', filemode='a')
 
-try:
-    api = falcon.API(middleware=[SessionMiddleware()])
-    api.add_route('/user/{user}', Recommend())
-except Exception:
-    logging.error('Unhandled error while initializing API')
+        # Suppress outside loggers
+        logging.getLogger('prawcore').setLevel(logging.WARNING)
+        logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
+        logging.getLogger('werkzeug').setLevel(logging.WARNING)
+
+    except Exception as e:
+        raise RuntimeError('Unable to initiate logging:\n{}'.format(e))
+
+
+def init_api():
+    try:
+        api = falcon.API()
+        api.add_route('/user/{user}', Recommend())
+
+        return api
+    except Exception as e:
+        logging.critical('Error initializing API:\n{}'.format(e))
+        raise RuntimeError('Error initializing API')
+
+
+init_logging()
+session = reddit.Reddit().get_session()
+api = init_api()

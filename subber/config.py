@@ -1,6 +1,8 @@
 import configparser
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 def get_config():
     """Return dictionary containing Subber config values"""
@@ -27,24 +29,47 @@ def get_config():
         # Validate required sections contain required opts
         for section, opts in required_sections.items():
             for opt in opts:
+                if not config.has_section(section):
+                    logger.critical('Missing required config section "{}" in '
+                                    'Subber config'.format(section))
+
+                    raise RuntimeError('Subber config file not loaded.')
+
                 if not config.has_option(section, opt):
-                    logging.exception('Missing required config option "{}"'
-                                      ' in section "{}"'.format(
-                                          opt, section))
-                    raise Exception('Required config option "{}" in section '
-                                    '"{}" missing from config file '
-                                    '"{}"'.format(opt, section, CONFIG_FILE))
+                    logger.critical('Missing required config option "{}" in '
+                                    'section "{}"'.format(opt, section))
+
+                    raise RuntimeError('Subber config file not loaded.')
 
     # Load config
     try:
         config = configparser.RawConfigParser()
         config.readfp(open(CONFIG_FILE))
+    except configparser.MissingSectionHeaderError:
+        logger.critical('Improper config file format detected. No section '
+                        'headers found')
+
+        raise RuntimeError('Subber config file not loaded.')
     except Exception:
-        logging.exception('Error encountered while loading config file \n')
-        raise Exception('Config file not found. Please add a config file '
-                        '"{}" to the subber directory.'.format(CONFIG_FILE))
+        logger.critical('Config file not found. Please add a config file "{}" '
+                        'to the project directory.'.format(CONFIG_FILE))
+
+        raise RuntimeError('Subber config file not loaded.')
 
     # Validate config
     validate_config(config)
 
     return config
+
+
+def get_api_config():
+    try:
+        return get_config()['reddit-api']
+    except KeyError as e:
+        logger.critical('Could not load configuration for Reddit API. '
+                        'Verify section "[reddit-api]" exists in Subber '
+                        'config.')
+
+        raise RuntimeError('Could not load configuration for Reddit API. '
+                           'Verify section "[reddit-api]" exists in Subber '
+                           'config.')
