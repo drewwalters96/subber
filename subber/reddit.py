@@ -1,41 +1,36 @@
 import logging
 
 import praw
+import prawcore
 
 from subber import config
 
+logger = logging.getLogger(__name__)
+
 
 class Reddit(object):
-    """Reddit API connection"""
+    """Reddit API session"""
 
     def __init__(self):
-        try:
-            self._cfg = config.get_config()['reddit-api']
-        except Exception:
-            logging.exception('Unhandled exception while getting '
-                              'configuration')
+        self._cfg = config.get_api_config()
+        self._session = praw.Reddit(client_id=self._cfg['id'],
+                                    client_secret=self._cfg['secret'],
+                                    password=self._cfg['password'],
+                                    user_agent='web app',
+                                    username=self._cfg['username'])
 
-    def __enter__(self):
+        # Verify connection
         try:
-            self.session = praw.Reddit(client_id=self._cfg['id'],
-                                       client_secret=self._cfg['secret'],
-                                       password=self._cfg['password'],
-                                       user_agent='web app',
-                                       username=self._cfg['username'])
-        except KeyError:
-            logging.debug('Configuration file missing one or more'
-                          ' required fields when passed to Reddit'
-                          ' connection')
-            return
-        except Exception:
-            logging.exception('Unhandled exception while creating a Reddit'
-                              ' API connection '
-                              'for user {}'.format(self._cfg['username']))
-            return
-        return self.session
+            self._session.user.me()
+        except prawcore.exceptions.OAuthException:
+            logger.critical('Unable to initialize Reddit API session. Verify '
+                            'the credentials in the Subber config file are '
+                            'correct.')
 
-    def __exit__(self, exception_type, exception_value, traceback):
-        pass
+            raise RuntimeError('Unable to initialize Reddit API session.')
+
+    def get_session(self):
+        return self._session
 
 
 def get_user_recommendations(session, user):
@@ -49,9 +44,9 @@ def get_user_recommendations(session, user):
     try:
         similar_users = _get_similar_users(session, user)
     except Exception as e:
-        logging.error('Unable to get recommendations for user {}. Error '
-                      'retrieving similar users.'.format(user))
-        logging.exception(e)
+        logger.error('Unable to get recommendations for user {}. Error '
+                     'retrieving similar users.'.format(user))
+        logger.exception(e)
 
         return
 
@@ -68,16 +63,15 @@ def get_user_recommendations(session, user):
                     subs.append(sub)
 
         except Exception as e:
-            logging.exception('Unable to get recommendations for user {}. '
-                              'Error retrieving active subs for user '
-                              '{}'.format(user, sim_user))
-            logging.exception(e)
+            logger.exception('Unable to get recommendations for user {}. '
+                             'Error retrieving active subs for user '
+                             '{}'.format(user, sim_user))
+            logger.exception(e)
 
     if len(subs) == 0:
-        logging.warning('Warning: No recommendations found for user '
-                        '{}'.format(user))
+        logger.warning('No recommendations found for user {}'.format(user))
     else:
-        logging.info('Recommending subs {} to user {}.'.format(subs, user))
+        logger.debug('Recommending subs {} to user {}.'.format(subs, user))
 
     return subs
 
@@ -92,41 +86,36 @@ def _get_similar_users(session, user):
     """
     # Retrieve commenters from parent comments
     parent_commenters = []
-    try:
-        comments = _get_user_comments(session, user)
-    except Exception:
-        logging.exception('Unhandled exception getting user comments for '
-                          'user {}'.format(user))
+    comments = _get_user_comments(session, user)
 
     try:
         for comment in comments:
             parent = comment.parent().author.name
             parent_commenters.append(parent)
     except Exception:
-        logging.debug('Exception encountered for for user '
-                      '{}'.format(user))
-        pass
+            # Comment is deleted
+            pass
 
     # Retrieve commenters from user's top posts
     submission_commenters = []
-    try:
-        submissions = _get_user_submissions(session, user)
-    except Exception:
-        logging.error('Unhandled error while getting comments '
-                      'for user {}'.format(user))
-        submissions = list()
+    submissions = _get_user_submissions(session, user)
+
     try:
         for s in submissions:
             for c in s.comments[:4]:
                 if c.author:
                     submission_commenters.append(c.author.name)
     except Exception:
-        logging.exception('Error while adding commenters')
+        # Comments missing
+        logger.debug('Skipping submission comments for user '
+                     '{}'.format(user))
         pass
-    output = parent_commenters + submission_commenters
-    logging.debug('Returning commenters and users as {} for user '
-                  '{}'.format(output, user))
-    return output
+
+    similar_users = parent_commenters + submission_commenters
+    logger.debug('Returning similar users for user {} as '
+                 '{}'.format(user, similar_users))
+
+    return similar_users
 
 
 def _get_user_comments(session, user):
@@ -137,13 +126,12 @@ def _get_user_comments(session, user):
     user     -- username to retrieve comments for
     """
     try:
-        output = session.redditor(user).comments.new(limit=30)
-        logging.debug('User\'s comments retrieved for user {} as {}'.format(
-                      user, output))
-        return output
+        comments = session.redditor(user).comments.new(limit=30)
+        logger.debug('PRAW comment request made for user {}'.format(user))
+
+        return comments
     except Exception:
-        logging.exception('Error retrieving user comments for user {}'.format(
-                          user))
+        logger.error('Error retrieving comments for user {}'.format(user))
 
 
 def _get_user_submissions(session, user):
@@ -153,12 +141,13 @@ def _get_user_submissions(session, user):
     session  -- instance of the Reddit api
     user     -- username to retrieve submissions for
     """
-    logging.info('Retrieving user submissions for user {}'.format(user))
-    output = session.redditor(user).submissions.top(limit=13)
-    logging.info('User submissions retrieved for user {}'.format(
-        user))
-    logging.debug('User submissions retrieved as {}'.format(output))
-    return output
+    try:
+        submissions = session.redditor(user).submissions.top(limit=13)
+        logger.debug('PRAW submission request made for user {}'.format(user))
+
+        return submissions
+    except Exception:
+        logger.error('Error retrieving submissions for user {}'.format(user))
 
 
 def _get_active_subs(session, user):
@@ -168,8 +157,6 @@ def _get_active_subs(session, user):
     session -- instance of the Reddit api
     user    -- username to retrieve active subs for
     """
-    logging.info('Retrieving active subs for user {}'.format(user))
-
     def process_posts(posts):
         subs = []
         try:
@@ -179,37 +166,38 @@ def _get_active_subs(session, user):
                 if sub not in subs:
                     subs.append(sub)
         except Exception:
-            logging.exception('Exception procesing user {}\'s post '
-                              '{}'.format(user, p))
+            # Skip post if missing metadata
+            logger.error('Error processing content request results for user '
+                         '{}. User may be deleted'.format(user))
             pass
-        logging.info('Retrieved {} subs for user {}'.format(len(subs), user))
-        logging.debug('Subs for user {} retrieved as {}'.format(user, subs))
+
         return subs
 
-    # Retrieve user comments and posts
-    try:
-        comments = _get_user_comments(session, user)
-    except Exception:
-        logging.exception('Unhandled exception retrieving user comments '
-                          'for user {}'.format(user))
-        return
-    try:
-        submissions = _get_user_submissions(session, user)
-    except Exception:
-        logging.exception('Unhandled exception retrieving user posts '
-                          'for user {}'.format(user))
-        return
+    # Retrieve user comments and submissions
+    comments = _get_user_comments(session, user)
+    submissions = _get_user_submissions(session, user)
 
     # Process active subs
-    try:
-        subs = process_posts(comments) + process_posts(submissions)
-        logging.info('{} subs found for user {}'.format(len(subs), user))
-        logging.debug('Subs found for user {} as {}'.format(user, subs))
-        return subs
-    except Exception:
-        logging.exception('Error combining processed posts and comments for '
-                          'user {}'.format(user))
-        return
+    subs = []
+
+    if comments is not None:
+        logger.debug('Processing PRAW comment request results for user '
+                     '{}'.format(user))
+
+        subs = process_posts(comments)
+
+    if submissions is not None:
+        logger.debug('Processing PRAW submission requst results for user '
+                     '{}'.format(user))
+
+        subs = subs + process_posts(submissions)
+
+    logger.debug('{} active subs found for user {}'.format(len(subs), user))
+
+    if len(subs) > 0:
+        logger.debug('Active subs found for user {} as {}'.format(user, subs))
+
+    return subs
 
 
 def get_sub_info(session, sub):
@@ -222,11 +210,9 @@ def get_sub_info(session, sub):
     try:
         subreddit = session.subreddit(sub)
         sub_name = 'r/{}'.format(sub)
-    except Exception:
-        logging.exception('Unhandled exception retrieving sub info for sub '
-                          '{}'.format(sub))
-        return
 
-    return {'sub': {'name': sub_name,
-                    'title': subreddit.title,
-                    'desc': subreddit.description}}
+        return {'sub': {'name': sub_name,
+                        'title': subreddit.title,
+                        'desc': subreddit.description}}
+    except Exception:
+        logger.debug('Unable to retrieve sub info for {}'.format(sub))
