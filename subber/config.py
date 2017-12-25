@@ -44,7 +44,8 @@ def get_config():
     # Load config
     try:
         config = configparser.RawConfigParser()
-        config.readfp(open(CONFIG_FILE))
+        with open(CONFIG_FILE) as cf:
+            config.read_file(cf)
     except configparser.MissingSectionHeaderError:
         logger.critical('Improper config file format detected. No section '
                         'headers found')
