@@ -22,6 +22,9 @@ class TestReddit(unittest.TestCase):
         # Mock sub info
         sub = {'name': 'sub',
                'title': 'title',
+               'age': 3,
+               'subscribers': 8692,
+               'over18': False,
                'desc': 'desc'}
 
         mock_sub_info.return_value = sub
@@ -125,23 +128,34 @@ class TestReddit(unittest.TestCase):
         mock_submissions.assert_called_with(None, user_param)
 
     @patch('praw.Reddit')
-    def test_get_sub_info(self, mock_session):
+    @patch('subber.util.utc_epoch_sec_to_years')
+    def test_get_sub_info(self, mock_years, mock_session):
+        # Mock epoch conversion
+        mock_years.return_value = 3
+
         # Mock subreddit instance
         subreddit = Mock(display_name_prefixed='r/subreddit',
                          title='Title',
-                         public_description_html='<p>Description.</p>')
+                         created=892349754,
+                         subscribers=8962,
+                         over18=False,
+                         public_description='Description')
 
         mock_session.subreddit.return_value = subreddit
 
         # Test results
         expected_result = {'name': subreddit.display_name_prefixed,
                            'title': subreddit.title,
-                           'desc': subreddit.public_description_html}
+                           'age': 3,
+                           'subscribers': subreddit.subscribers,
+                           'over18': subreddit.over18,
+                           'desc': subreddit.public_description}
 
         sub_param = 'subreddit'
         self.assertEqual(reddit.get_sub_info(mock_session, sub_param),
                          expected_result)
 
+        mock_years.assert_called_with(subreddit.created)
         mock_session.subreddit.assert_called_with(sub_param)
 
 
