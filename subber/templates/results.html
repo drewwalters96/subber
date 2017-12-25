@@ -1,14 +1,35 @@
 {% extends "base.html" %}
+
+{# Sub recommendations #}
 {% block content %}
   <p>Results for {{ user }}</p>
   <a href="/">Click to find subs for another user</a>
 
+  {# Create sub card for each sub #}
   {% for sub in recommendations %}
+    {#  Sub card #}
     <div class="card">
       <div class="card-header">{{ sub['name'] }}</div>
       <div class="card-block">
         <h4 class="card-title">{{ sub['title'] }}</h4>
-        <div class="card-text">{{ sub['desc']|safe }}</div>
+
+        {# Sub metadata section #}
+        {% if sub['over18'] %}
+          <p class="metadata" style="color:red">Over 18 community</p>
+        {% endif %}
+
+        <div class="metadata">
+          {{ '{:,} subscribers'.format(sub['subscribers']) }}
+        </div>
+
+        {% if sub['age'] < 1 %}
+          <div class="metadata">Community for less than one year</div>
+        {% else %}
+          <div class="metadata">Community for {{ sub['age'] }} years</div>
+        {% endif %}
+
+        {# Sub description and link #}
+        <div class="card-text">{{ sub['desc'] }}</div>
         <a href="http://reddit.com/{{ sub['name'] }}" class="btn btn-primary"
            id="visit-btn">Visit {{ sub['name'] }}</a>
       </div>

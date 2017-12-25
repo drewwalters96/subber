@@ -3,7 +3,7 @@ import logging
 import praw
 import prawcore
 
-from subber import config
+from subber import config, util
 
 logger = logging.getLogger(__name__)
 
@@ -208,10 +208,17 @@ def get_sub_info(session, sub):
     sub     -- subreddit to get metadata for
     """
     try:
+        # Get subreddit metadata
         subreddit = session.subreddit(sub)
+
+        # Convert seconds after UTC epoch to years since sub creation
+        sub_age = util.utc_epoch_sec_to_years(subreddit.created)
 
         return {'name': subreddit.display_name_prefixed,
                 'title': subreddit.title,
-                'desc': subreddit.public_description_html}
+                'age': sub_age,
+                'subscribers': subreddit.subscribers,
+                'over18': subreddit.over18,
+                'desc': subreddit.public_description}
     except Exception:
         logger.debug('Unable to retrieve sub info for {}'.format(sub))
