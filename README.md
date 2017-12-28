@@ -61,6 +61,10 @@ docker rm subber
 
 ### Run Subber as a Python package (for developers)
 
+**NOTE:** Running Subber as a Python package on Windows is not supported,
+due to Gunicorn's dependence on the fnctl module. However, running Subber
+in a container on Windows is still supported. 
+
 Install project dependencies and package for Python 3:
 
 ```bash
