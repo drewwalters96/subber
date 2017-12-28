@@ -45,8 +45,9 @@ class TestReddit(unittest.TestCase):
     @patch('subber.reddit._get_user_submissions')
     def test_get_similar_users(self, mock_submissions, mock_comments):
         # Mock parent_comments
-        parent_comment_authors = ['comment_author1', 'comment_author2',
-                                  'comment_author3', 'comment_author4']
+        parent_comment_authors = ['user', 'comment_author2',
+                                  'comment_author3', 'comment_author4',
+                                  'comment_author5', 'comment_author6']
 
         comments = []
         for author in parent_comment_authors:
@@ -61,7 +62,7 @@ class TestReddit(unittest.TestCase):
         mock_comments.return_value = comments
 
         # Mock submissions
-        submission_comment_authors = ['submission_comment_author1',
+        submission_comment_authors = ['user',
                                       'submission_comment_author2',
                                       'submission_comment_author3',
                                       'submission_comment_author4',
@@ -86,9 +87,8 @@ class TestReddit(unittest.TestCase):
         mock_submissions.return_value = [submission_1, submission_2]
 
         # Test results
-        expected_result = (parent_comment_authors) + \
-                          (submission_comment_authors[:4]) + \
-                          (submission_comment_authors[6:])
+        expected_result = (parent_comment_authors[1:]) + \
+                          (submission_comment_authors[6:7])
 
         user_param = 'user'
         self.assertEqual(reddit._get_similar_users(None, user_param),

@@ -84,49 +84,52 @@ def _get_similar_users(session, user):
     session -- instance of the Reddit api
     user    -- username to retrieve similar users for
     """
+    similar_users = []
+
     # Retrieve commenters from parent comments
-    parent_commenters = []
     comments = _get_user_comments(session, user)
 
     try:
         for comment in comments:
             parent = comment.parent().author.name
-            parent_commenters.append(parent)
+            if parent not in similar_users and parent != user:
+                similar_users.append(parent)
     except Exception:
         # Comment is deleted
         pass
 
     # Retrieve commenters from user's top posts
-    submission_commenters = []
     submissions = _get_user_submissions(session, user)
 
     try:
         for s in submissions:
-            for c in s.comments[:4]:
-                if c.author:
-                    submission_commenters.append(c.author.name)
+            for c in s.comments:
+                if (c.author and c.author.name not in similar_users and
+                        c.author.name != user):
+                    similar_users.append(c.author.name)
+
+                break  # limit to one submission comment
     except Exception:
         # Comments missing
         logger.debug('Skipping submission comments for user '
                      '{}'.format(user))
         pass
 
-    similar_users = parent_commenters + submission_commenters
-    logger.debug('Returning similar users for user {} as '
-                 '{}'.format(user, similar_users))
+    logger.debug('Considering similar users {} for user '
+                 '{}'.format(similar_users, user))
 
     return similar_users
 
 
 def _get_user_comments(session, user):
-    """Return a list of a user's thirty newest comments
+    """Return a list of a user's five newest comments
 
     Keyword arguments:
     session  -- instance of the Reddit api
     user     -- username to retrieve comments for
     """
     try:
-        comments = session.redditor(user).comments.new(limit=30)
+        comments = session.redditor(user).comments.new(limit=5)
         logger.debug('PRAW comment request made for user {}'.format(user))
 
         return comments
@@ -135,14 +138,14 @@ def _get_user_comments(session, user):
 
 
 def _get_user_submissions(session, user):
-    """Return a list of a user's top fifteen submissions
+    """Return a list of a user's top five submissions
 
     Keyword arguments:
     session  -- instance of the Reddit api
     user     -- username to retrieve submissions for
     """
     try:
-        submissions = session.redditor(user).submissions.top(limit=13)
+        submissions = session.redditor(user).submissions.top(limit=5)
         logger.debug('PRAW submission request made for user {}'.format(user))
 
         return submissions
