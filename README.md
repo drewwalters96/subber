@@ -33,20 +33,20 @@ vi subber.cfg
 In order to run Subber in a container, you must have
 [Docker](https://www.docker.com/get-docker) installed.
 
-Pull the Subber Docker image:
+Pull the Quay image for the latest release:
 
 **NOTE:** *Depending on your platform, you may need to run Docker with root
 privileges.*
 
 ```bash
-docker pull quay.io/drewwalters96/subber
+docker pull quay.io/drewwalters96/subber:0.1.0-pre-alpha
 ```
 
 Run the subber container with mounted Subber config file:
 
 ```bash
 docker run --name subber -dp 8000:8000 -v $PWD/subber.cfg:/subber/subber.cfg \
-quay.io/drewwalters96/subber:latest
+quay.io/drewwalters96/subber:0.1.0-pre-alpha
 ```
 
 The Subber container is now running in detached mode and is ready for usage
@@ -63,7 +63,7 @@ docker rm subber
 
 **NOTE:** Running Subber as a Python package on Windows is not supported,
 due to Gunicorn's dependence on the fnctl module. However, running Subber
-in a container on Windows is still supported. 
+in a container on Windows is still supported.
 
 Install project dependencies and package for Python 3:
 
