@@ -31,7 +31,7 @@ class TestReddit(unittest.TestCase):
 
         # Test results
         user_param = 'user'
-        expected_result = [sub for u in similar_users for s in active_subs]
+        expected_result = [sub]
 
         self.assertEqual(reddit.get_user_recommendations(None,
                                                          user_param),

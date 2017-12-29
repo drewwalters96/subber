@@ -59,8 +59,12 @@ def get_user_recommendations(session, user):
 
             # Add active subs to recommendations
             for sub in active_subs:
-                if sub not in subs:
-                    subs.append(get_sub_info(session, sub[2:]))
+
+                # Get sub metadata and append if not in subs
+                sub_info = get_sub_info(session, sub[2:])
+
+                if sub_info not in subs:
+                    subs.append(sub_info)
 
         except Exception as e:
             logger.exception('Unable to get recommendations for user {}. '
