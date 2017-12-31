@@ -23,9 +23,21 @@ def get_sub_recommendations():
     """
     user = flask.request.form['username']
 
-    logger.info('Recieved recommendation request '
+    logger.info('Received recommendation request '
                 'for user {0}'.format(user))
 
+    # Make sure user exists
+    try:
+        logger.info('User {} tested for existence'.format(user))
+        redditor = session.redditor(user)
+        hasattr(redditor, 'created')
+    except reddit.prawcore.exceptions.NotFound:
+        logger.error('Unable to fetch recommendations for {} - '
+                     'user does not exist'.format(user))
+        response = flask.render_template('invalid-user.html', user=user)
+        return response
+
+    # Get recommendations
     try:
         recommendations = reddit.get_user_recommendations(session, user)
 
