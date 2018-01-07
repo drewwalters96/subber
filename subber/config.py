@@ -15,16 +15,22 @@ def get_config():
         Keyword arguments:
         cfg -- the config file to validate
         """
-        # Required opt groups
+        # Required reddit API opt groups
         ID = 'id'
         SECRET = 'secret'
         PASSWORD = 'password'
         USERNAME = 'username'
         reddit_api_opts = [ID, SECRET, PASSWORD, USERNAME]
 
+        # Required recommendation system opt groups
+        RECOMMEND_ACTIVES = 'recommend-actives'
+        recommendation_system_opts = [RECOMMEND_ACTIVES]
+
         # Required sections
         REDDIT_API = 'reddit-api'
-        required_sections = {REDDIT_API: reddit_api_opts}
+        RECOMMENDATION_SYSTEM = 'recommendation-system'
+        required_sections = {REDDIT_API: reddit_api_opts,
+                             RECOMMENDATION_SYSTEM: recommendation_system_opts}
 
         # Validate required sections contain required opts
         for section, opts in required_sections.items():
@@ -74,3 +80,15 @@ def get_api_config():
         raise RuntimeError('Could not load configuration for Reddit API. '
                            'Verify section "[reddit-api]" exists in Subber '
                            'config.')
+
+
+def get_recommendation_system_config():
+    try:
+        return get_config()['recommendation-system']
+    except KeyError as e:
+        message = ('Could not load configuration for Recommendation'
+                   ' System. Verify section "[recommendation-system]" '
+                   ' exists in Subber .config.')
+        logger.critical(message)
+
+        raise RuntimeError(message)
