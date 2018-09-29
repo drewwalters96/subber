@@ -5,3 +5,11 @@ subber.cfg
 */venv/*
 venv/*
 venv
+*.egg
+*.egg-info/
+.tox/
+htmlcov/
+.coverage
+.coverage.*
+.cache
+cover/
