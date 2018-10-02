@@ -40,6 +40,9 @@ def get_user_recommendations(session, user):
     session  -- instance of the Reddit api
     user     -- username to retrieve recommendations for
     """
+
+    # Recommendation system configuration
+    cfg = config.get_recommendation_system_config()
     # Get similar users
     try:
         similar_users = _get_similar_users(session, user)
@@ -71,6 +74,18 @@ def get_user_recommendations(session, user):
                              'Error retrieving active subs for user '
                              '{}'.format(user, sim_user))
             logger.exception(e)
+
+    # if configuration indicates we could not recommend active subs
+    if cfg['recommend-actives'] == 'False':
+        # Get THIS user's active subs
+        active_subs = _get_active_subs(session, user)
+        # for each sub this user is active in...
+        for sub in active_subs:
+            sub_info = get_sub_info(session, sub[2:])
+            # if were going to recommend an active sub, just assume they
+            #  already follow it and remove it from the list
+            if sub_info in subs:
+                subs.remove(sub_info)
 
     if len(subs) == 0:
         logger.warning('No recommendations found for user {}'.format(user))

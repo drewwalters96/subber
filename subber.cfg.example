@@ -3,3 +3,6 @@ id=ID
 secret=SECRET
 password=PASSWORD
 username=USERNAME
+
+[recommendation-system]
+recommend-actives=False
