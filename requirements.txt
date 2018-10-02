@@ -1,3 +1,4 @@
 flask==0.12.2
 gunicorn==19.7.1
 praw==5.3.0
+jsonschema==2.6.0
