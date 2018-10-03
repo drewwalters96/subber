@@ -24,8 +24,7 @@ TESTCONF = os.path.join(TESTDIR, 'config_files')
 
 class TestConfig(unittest.TestCase):
 
-    @log_capture()
-    def test_good_configuration(self, capture):
+    def test_good_configuration(self):
         cfg = os.path.join(TESTCONF, 'good.cfg')
         res = config.get_config(cfg)
         self.assertEqual("ID", res["id"])
