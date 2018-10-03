@@ -13,8 +13,6 @@
 
 import datetime
 import logging
-import math
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +24,15 @@ def utc_epoch_sec_to_years(sec):
                   'date'.format(sec))
 
     try:
-        # Elapsed seconds from time
-        elapsed_sec = time.time() - sec
+        # Elapsed seconds
+        elapsed_sec = datetime.now() - sec
 
         # Elapsed days from time
         days = datetime.timedelta(seconds=elapsed_sec).days
 
         # Reddit rounds years this way on their website
         # Subber does the same for consistency
-        return math.floor(days/365)
+        return int(days/365)
 
     except Exception:
         logging.error('Unable to calculate years to date from UTC epoch '
