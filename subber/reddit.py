@@ -85,7 +85,7 @@ def get_user_recommendations(session, user):
                              '{}'.format(user, sim_user))
             logger.exception(e)
 
-    if len(subs) == 0:
+    if not subs:
         logger.warning('No recommendations found for user {}'.format(user))
     else:
         logger.debug('Recommending subs {} to user {}.'.format(subs, user))
@@ -214,7 +214,7 @@ def _get_active_subs(session, user):
 
     logger.debug('{} active subs found for user {}'.format(len(subs), user))
 
-    if len(subs) > 0:
+    if subs:
         logger.debug('Active subs found for user {} as {}'.format(user, subs))
 
     return subs
