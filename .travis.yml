@@ -1,9 +1,21 @@
-sudo: false
+sudo: required
 language: python
 python:
   - "3.5"
   - "3.6"
+services:
+  - docker
+
 install: pip install tox-travis
-script: tox
+
+before_script:
+  - tox
+
+script:
+  - docker build -t subber:subber .
+
+
 notifications:
   email: false
+
+
