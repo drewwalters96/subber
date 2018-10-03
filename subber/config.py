@@ -49,7 +49,8 @@ def get_config(config_file="subber.cfg"):
         logger.critical(("Config file not found. Please add a config file %s "
                         "to the project directory."), config_file)
         raise RuntimeError('Subber config file not loaded.')
-    except configparser.NoSectionError as nosec:
+    except (configparser.NoSectionError,
+            configparser.MissingSectionHeaderError) as nosec:
         logger.critical("Missing header: %s", nosec.message)
         raise RuntimeError('Subber config file not loaded.')
     except jsonschema.exceptions.SchemaError as serr:
