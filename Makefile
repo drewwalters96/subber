@@ -17,7 +17,7 @@ clean:
 
 install:
 	pip3 install -r requirements.txt
-	pip install .
+	pip3 install .
 
 lint:
 	tox -e pep8
