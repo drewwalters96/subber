@@ -27,7 +27,7 @@ run:
 		   --detach \
 		   --publish 8000:8000 \
 		   --volume $(shell PWD)/subber.cfg:/subber/subber.cfg \
-		   $(IMAGE_NAME):$(IMAGE_TAG) .
+		   $(IMAGE_NAME):$(IMAGE_TAG)
 
 stop:
 	docker rm -f $(APP_NAME)
