@@ -16,7 +16,7 @@ import logging
 import praw
 import prawcore
 
-from subber import config, util
+from subber import util
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +24,12 @@ logger = logging.getLogger(__name__)
 class Reddit(object):
     """Reddit API session"""
 
-    def __init__(self):
-        self._cfg = config.get_api_config()
-        self._session = praw.Reddit(client_id=self._cfg['id'],
-                                    client_secret=self._cfg['secret'],
-                                    password=self._cfg['password'],
+    def __init__(self, client_id, client_secret, password, username):
+        self._session = praw.Reddit(client_id=client_id,
+                                    client_secret=client_secret,
+                                    password=password,
                                     user_agent='web app',
-                                    username=self._cfg['username'])
+                                    username=username)
 
         # Verify connection
         try:
