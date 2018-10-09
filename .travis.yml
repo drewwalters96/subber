@@ -1,21 +1,33 @@
-sudo: required
+---
 language: python
-python:
-  - "3.5"
-  - "3.6"
-services:
-  - docker
-
-install: pip install tox-travis
-
-before_script:
-  - tox
-
-script:
-  - docker build -t subber:subber .
-
-
 notifications:
   email: false
-
-
+jobs:
+  include:
+    - stage: lint
+      name: PEP8
+      install: pip install tox-travis
+      script: make lint
+    - stage: build/install
+      name: Docker build
+      sudo: required
+      services:
+        - docker
+      script: make
+    - stage: build/install
+      name: "Install (Python 3.5)"
+      python: "3.5"
+      script: make install
+    - stage: build/install
+      name: "Install (Python 3.6)"
+      python: "3.6"
+      script: make install
+    - stage: Test
+      name: "Unit tests (Python 3.5)"
+      install: pip install tox-travis
+      script: "tox -e py35"
+    - stage: Test
+      name: "Unit tests (Python 3.6)"
+      install: pip install tox-travis
+      script: "tox -e py36"
+...
