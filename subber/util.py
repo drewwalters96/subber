@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import datetime
+import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,17 +23,5 @@ def utc_epoch_sec_to_years(sec):
     logging.debug('Converting {} seconds from UTC epoch to years to '
                   'date'.format(sec))
 
-    try:
-        # Elapsed seconds
-        elapsed_sec = datetime.now() - sec
-
-        # Elapsed days from time
-        days = datetime.timedelta(seconds=elapsed_sec).days
-
-        # Reddit rounds years this way on their website
-        # Subber does the same for consistency
-        return int(days/365)
-
-    except Exception:
-        logging.error('Unable to calculate years to date from UTC epoch '
-                      'timestamp')
+    time_diff = int(time.time()) - sec
+    return int(time_diff / 60 / 60 / 24 // 365.25)
