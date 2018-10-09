@@ -16,7 +16,7 @@ import logging
 
 import flask
 
-from subber import reddit
+from subber import config, reddit
 
 app = flask.Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -93,7 +93,11 @@ def init_logging():
 
 def init_session():
     """Init Reddit API session"""
-    return reddit.Reddit().get_session()
+    cfg = config.get_config()
+    return reddit.Reddit(cfg['id'],
+                         cfg['secret'],
+                         cfg['password'],
+                         cfg['username']).get_session()
 
 
 init_logging()

@@ -19,8 +19,9 @@ import flask_testing
 
 class TestSubber(flask_testing.TestCase):
 
+    @patch('subber.config.get_config')
     @patch('subber.reddit.Reddit')
-    def create_app(self, mock_session):
+    def create_app(self, mock_session, mock_config):
         # Mock session return value
         redditor = {'name': 'u/test',
                     'created': 2545896143}
