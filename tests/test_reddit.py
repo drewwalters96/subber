@@ -11,11 +11,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime
+from datetime import timedelta
 import unittest
 from unittest.mock import Mock, patch
 
 from subber import reddit
-
+from subber import util
 
 class TestReddit(unittest.TestCase):
     @patch('subber.reddit._get_similar_users')
@@ -170,6 +172,30 @@ class TestReddit(unittest.TestCase):
 
         mock_years.assert_called_with(subreddit.created)
         mock_session.subreddit.assert_called_with(sub_param)
+
+
+    def test_util_utc_epoch_sec_to_years(self):
+        def unix_time_seconds(time):
+            epoch = datetime.utcfromtimestamp(0)
+            return (time - epoch).total_seconds()
+
+        def unix_time_years(time):
+            epoch = datetime.utcfromtimestamp(0)
+            return int((time - epoch).total_seconds() / (60*60*24*365))
+
+        time_now = unix_time_seconds(datetime.utcnow())
+        one_year = time_now - timedelta(days=365).total_seconds()
+        five_years = time_now - (timedelta(days=365).total_seconds() * 5)
+
+        years_epoch = unix_time_years(datetime.utcnow())
+
+        self.assertEqual(util.utc_epoch_sec_to_years(time_now), 0)
+        self.assertEqual(util.utc_epoch_sec_to_years(one_year), 1)
+        self.assertEqual(util.utc_epoch_sec_to_years(five_years), 5)
+
+        self.assertEqual(util.utc_epoch_sec_to_years('time'), -1)
+        self.assertEqual(util.utc_epoch_sec_to_years(0), years_epoch)
+        self.assertEqual(util.utc_epoch_sec_to_years(True), years_epoch)
 
 
 if __name__ == '__main__':
